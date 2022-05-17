@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.zzt</groupId>
+    <artifactId>vertical-proxy</artifactId>
+    <packaging>pom</packaging>
+    <name>${project.artifactId}</name>
+    <properties>
+        <json.version>2.8.7</json.version>
+        <java.version>1.8</java.version>
+        <mysql.driver.version>8.0.15</mysql.driver.version>
+        <sharding.version>5.0.0</sharding.version>
+        <lombok.version>1.18.20</lombok.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+    <modules>
+        <module>shardingsphere-proxy-frontend</module>
+        <module>shardingsphere-proxy-backend</module>
+        <module>shardingsphere-proxy-bootstrap</module>
+        <module>backend-extend</module>
+        <module>infra-extend</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
