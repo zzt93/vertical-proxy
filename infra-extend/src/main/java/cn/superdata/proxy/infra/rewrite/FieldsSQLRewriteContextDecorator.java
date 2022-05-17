@@ -1,6 +1,6 @@
 package cn.superdata.proxy.infra.rewrite;
 
-import cn.superdata.proxy.core.rule.ColumnRule;
+import cn.superdata.proxy.core.rule.ShardingExtraRule;
 import org.apache.shardingsphere.infra.config.properties.ConfigurationProperties;
 import org.apache.shardingsphere.infra.rewrite.context.SQLRewriteContext;
 import org.apache.shardingsphere.infra.rewrite.context.SQLRewriteContextDecorator;
@@ -12,9 +12,9 @@ import org.apache.shardingsphere.sharding.constant.ShardingOrder;
 import java.util.Collection;
 import java.util.LinkedList;
 
-public class FieldsSQLRewriteContextDecorator implements SQLRewriteContextDecorator<ColumnRule> {
+public class FieldsSQLRewriteContextDecorator implements SQLRewriteContextDecorator<ShardingExtraRule> {
 	@Override
-	public void decorate(ColumnRule rule, ConfigurationProperties props, SQLRewriteContext sqlRewriteContext, RouteContext routeContext) {
+	public void decorate(ShardingExtraRule rule, ConfigurationProperties props, SQLRewriteContext sqlRewriteContext, RouteContext routeContext) {
 		Collection<SQLTokenGenerator> result = new LinkedList<>();
 		result.add(new ProjectionTokenGenerator(rule));
 		result.add(new FromTokenGenerator());
@@ -34,7 +34,7 @@ public class FieldsSQLRewriteContextDecorator implements SQLRewriteContextDecora
 	}
 
 	@Override
-	public Class<ColumnRule> getTypeClass() {
-		return ColumnRule.class;
+	public Class<ShardingExtraRule> getTypeClass() {
+		return ShardingExtraRule.class;
 	}
 }

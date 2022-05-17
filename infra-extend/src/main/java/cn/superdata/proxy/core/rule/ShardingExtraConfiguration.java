@@ -4,14 +4,13 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.shardingsphere.infra.config.function.DistributedRuleConfiguration;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Getter
 @Setter
-public class ColumnRuleConfiguration implements DistributedRuleConfiguration {
+public class ShardingExtraConfiguration implements DistributedRuleConfiguration {
 
-	private String pkName;
-	private Map<String, String> dataNodesPkName;
-	private Map<String, Map<String, String>> logicToActual;
+	private Map<String, ColumnRuleConfiguration> tables = new LinkedHashMap<>();
 
 }

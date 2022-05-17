@@ -17,7 +17,7 @@
 
 package cn.superdata.proxy.infra.rewrite;
 
-import cn.superdata.proxy.core.rule.ColumnRule;
+import cn.superdata.proxy.core.rule.ShardingExtraRule;
 import lombok.Setter;
 import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
@@ -38,10 +38,10 @@ import java.util.Map;
 @Setter
 public final class WhereTokenGenerator implements OptionalSQLTokenGenerator<SelectStatementContext>, RouteContextAware {
 
-    private final ColumnRule rule;
+    private final ShardingExtraRule rule;
     private RouteContext routeContext;
 
-    public WhereTokenGenerator(ColumnRule rule) {
+    public WhereTokenGenerator(ShardingExtraRule rule) {
         this.rule = rule;
     }
 
@@ -64,7 +64,8 @@ public final class WhereTokenGenerator implements OptionalSQLTokenGenerator<Sele
 
     private Map<String, String> getLogicAndActualColumns(SelectStatementContext sqlStatementContext, final RouteUnit routeUnit) {
         String actualTable = ColumnSegments.getSingleActualTable(sqlStatementContext, routeUnit);
-        return rule.getLogicToActual(actualTable);
+        String singleLogicTable = ColumnSegments.getSingleLogicTable(sqlStatementContext);
+        return rule.getLogicToActual(singleLogicTable, actualTable);
     }
 
     @Override

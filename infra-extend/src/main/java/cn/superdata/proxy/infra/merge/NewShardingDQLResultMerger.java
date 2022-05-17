@@ -17,15 +17,13 @@
 
 package cn.superdata.proxy.infra.merge;
 
-import cn.superdata.proxy.core.rule.ColumnRule;
+import cn.superdata.proxy.core.rule.ShardingExtraRule;
 import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.database.type.DatabaseType;
 import org.apache.shardingsphere.infra.executor.sql.execute.result.query.QueryResult;
 import org.apache.shardingsphere.infra.merge.engine.merger.ResultMerger;
 import org.apache.shardingsphere.infra.merge.result.MergedResult;
 import org.apache.shardingsphere.infra.metadata.schema.ShardingSphereSchema;
-import org.apache.shardingsphere.sharding.merge.dql.ShardingDQLResultMerger;
-import org.apache.shardingsphere.sql.parser.sql.common.statement.dml.SelectStatement;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -35,9 +33,9 @@ import java.util.List;
  */
 public final class NewShardingDQLResultMerger implements ResultMerger {
 
-    private final ColumnRule rule;
+    private final ShardingExtraRule rule;
 
-    public NewShardingDQLResultMerger(DatabaseType databaseType, ColumnRule rule) {
+    public NewShardingDQLResultMerger(DatabaseType databaseType, ShardingExtraRule rule) {
         this.rule = rule;
     }
 

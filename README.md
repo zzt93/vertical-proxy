@@ -11,3 +11,10 @@ Backend:
     - TiDB
 - ClickHouse
 - Presto 
+
+---
+
+###### Limitation
+
+- Performance
+- Only one-to-one

@@ -147,4 +147,12 @@ public class ColumnSegments {
 		}
 		return actualTableNames.iterator().next();
 	}
+
+	public static String getSingleLogicTable(SQLStatementContext sqlStatementContext) {
+		Collection<String> tableNames = sqlStatementContext.getTablesContext().getTableNames();
+		if (tableNames.size() != 1) {
+			throw new UnsupportedOperationException();
+		}
+		return tableNames.iterator().next();
+	}
 }

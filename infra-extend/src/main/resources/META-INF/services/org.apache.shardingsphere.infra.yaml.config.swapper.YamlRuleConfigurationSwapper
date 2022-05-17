@@ -15,4 +15,4 @@
 # limitations under the License.
 #
 
-cn.superdata.proxy.core.rule.ShardingExtraRuleBuilder
+cn.superdata.proxy.core.rule.ShardingExtraConfigurationYamlSwapper

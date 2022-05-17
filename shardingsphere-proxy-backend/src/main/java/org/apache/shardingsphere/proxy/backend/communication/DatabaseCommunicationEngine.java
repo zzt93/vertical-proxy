@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.proxy.backend.communication;
 
-import cn.superdata.proxy.core.rule.ColumnRule;
+import cn.superdata.proxy.core.rule.ShardingExtraRule;
 import cn.superdata.proxy.infra.merge.HeaderMerge;
 import lombok.RequiredArgsConstructor;
 import org.apache.shardingsphere.infra.binder.LogicSQL;
@@ -139,7 +139,7 @@ public final class DatabaseCommunicationEngine {
     }
     
     private List<QueryHeader> createQueryHeaders(final ExecutionContext executionContext, final List<QueryResult> queryResults) throws SQLException {
-        HeaderMerge.MappedQueryResults mappedQueryResults = HeaderMerge.mappedQueryResults(queryResults, executionContext.getSqlStatementContext(), (ColumnRule) metaData.getRuleMetaData().getRules().stream().filter(rule -> rule instanceof ColumnRule).findFirst().orElse(null));
+        HeaderMerge.MappedQueryResults mappedQueryResults = HeaderMerge.mappedQueryResults(queryResults, executionContext.getSqlStatementContext(), (ShardingExtraRule) metaData.getRuleMetaData().getRules().stream().filter(rule -> rule instanceof ShardingExtraRule).findFirst().orElse(null));
         int columnCount = mappedQueryResults.getColumnCount();
         List<QueryHeader> result = new ArrayList<>(columnCount);
         for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {

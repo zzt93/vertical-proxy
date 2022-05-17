@@ -1,6 +1,7 @@
 package cn.superdata.proxy.infra.merge;
 
-import cn.superdata.proxy.core.rule.ColumnRule;
+import cn.superdata.proxy.core.rule.ShardingExtraRule;
+import cn.superdata.proxy.infra.rewrite.ColumnSegments;
 import lombok.Data;
 import org.apache.shardingsphere.infra.binder.segment.select.projection.Projection;
 import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
@@ -58,10 +59,10 @@ public class HeaderMerge {
 
 	}
 
-	public static MappedQueryResults mappedQueryResults(List<QueryResult> queryResults, SQLStatementContext<?> sqlStatementContext1, ColumnRule columnRule) throws SQLException {
-		if (columnRule != null) {
-			if (hasSelectExpandProjections(sqlStatementContext1)) {
-				SelectStatementContext sqlStatementContext = (SelectStatementContext) sqlStatementContext1;
+	public static MappedQueryResults mappedQueryResults(List<QueryResult> queryResults, SQLStatementContext<?> sql, ShardingExtraRule shardingExtraRule) throws SQLException {
+		if (shardingExtraRule != null) {
+			if (hasSelectExpandProjections(sql)) {
+				SelectStatementContext sqlStatementContext = (SelectStatementContext) sql;
 				List<Projection> expandProjections = sqlStatementContext.getProjectionsContext().getExpandProjections();
 				List<MappedQueryResult> l = new ArrayList<>(expandProjections.size());
 				Map<Integer, Integer> pkIndex = new HashMap<>();
@@ -73,7 +74,8 @@ public class HeaderMerge {
 						QueryResult queryResult = queryResults.get(x);
 						QueryResultMetaData resultMetaData = queryResult.getMetaData();
 						String tableName = resultMetaData.getTableName(FIRST_INDEX);
-						Map<String, String> logicToActual = columnRule.getLogicToActual(tableName);
+						String singleLogicTable = ColumnSegments.getSingleLogicTable(sqlStatementContext);
+						Map<String, String> logicToActual = shardingExtraRule.getLogicToActual(singleLogicTable, tableName);
 						String actual = logicToActual.get(columnLabel);
 						if (actual != null) {
 							for (int i = FIRST_INDEX; i < FIRST_INDEX + resultMetaData.getColumnCount(); i++) {
@@ -93,7 +95,7 @@ public class HeaderMerge {
 				return new MappedQueryResults(l, getColumnCount(queryResults.get(0), sqlStatementContext), pkIndex);
 			}
 		}
-		return new MappedQueryResults(0, getColumnCount(queryResults.get(0), sqlStatementContext1));
+		return new MappedQueryResults(0, getColumnCount(queryResults.get(0), sql));
 	}
 
 	private static int getColumnCount(final QueryResult queryResultSample, SQLStatementContext<?> sqlStatementContext) throws SQLException {

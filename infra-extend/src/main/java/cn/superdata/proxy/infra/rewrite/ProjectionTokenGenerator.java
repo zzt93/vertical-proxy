@@ -17,7 +17,7 @@
 
 package cn.superdata.proxy.infra.rewrite;
 
-import cn.superdata.proxy.core.rule.ColumnRule;
+import cn.superdata.proxy.core.rule.ShardingExtraRule;
 import lombok.Setter;
 import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
@@ -26,14 +26,12 @@ import org.apache.shardingsphere.infra.rewrite.sql.token.generator.aware.RouteCo
 import org.apache.shardingsphere.infra.rewrite.sql.token.pojo.SQLToken;
 import org.apache.shardingsphere.infra.route.context.RouteContext;
 import org.apache.shardingsphere.infra.route.context.RouteUnit;
-import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.item.ProjectionSegment;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.item.ProjectionsSegment;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
@@ -43,10 +41,10 @@ import java.util.StringJoiner;
 @Setter
 public final class ProjectionTokenGenerator implements CollectionSQLTokenGenerator<SelectStatementContext>, RouteContextAware {
 
-    private final ColumnRule rule;
+    private final ShardingExtraRule rule;
     private RouteContext routeContext;
 
-    public ProjectionTokenGenerator(ColumnRule rule) {
+    public ProjectionTokenGenerator(ShardingExtraRule rule) {
         this.rule = rule;
     }
 
@@ -60,7 +58,8 @@ public final class ProjectionTokenGenerator implements CollectionSQLTokenGenerat
         Map<RouteUnit, String> projection = new HashMap<>();
         for (RouteUnit routeUnit : routeContext.getRouteUnits()) {
             String singleActualTable = ColumnSegments.getSingleActualTable(selectStatementContext, routeUnit);
-            Map<String, String> logicToActual = rule.getLogicToActual(singleActualTable);
+            String singleLogicTable = ColumnSegments.getSingleLogicTable(selectStatementContext);
+            Map<String, String> logicToActual = rule.getLogicToActual(singleLogicTable, singleActualTable);
             ArrayList<String> extract = ColumnSegments.projection(projections, logicToActual);
             StringJoiner sb = new StringJoiner(",");
             for (String segment : extract) {

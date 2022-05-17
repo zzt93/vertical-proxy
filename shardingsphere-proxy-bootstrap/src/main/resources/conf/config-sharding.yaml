@@ -127,7 +127,15 @@ rules:
   tables:
     wide_order:
       actualDataNodes: ds_0.data_flow, ds_0.data_flow_job
-#      id: data_flow.id, data_flow_job.data_flow_id
-#      logicToActual:
-#        - name: "data_flow.name"
-#        - type: "data_flow_job.type"
+- !EXTRA
+  tables:
+    wide_order:
+      pkName: id
+      dataNodesPkName:
+        data_flow: id
+        data_flow_job: data_flow_id
+      logicToActual:
+        data_flow:
+          name: "name"
+        data_flow_job:
+          type: "type"

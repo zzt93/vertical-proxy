@@ -1,6 +1,6 @@
 package cn.superdata.proxy.infra.merge;
 
-import cn.superdata.proxy.core.rule.ColumnRule;
+import cn.superdata.proxy.core.rule.ShardingExtraRule;
 import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
 import org.apache.shardingsphere.infra.config.properties.ConfigurationProperties;
@@ -11,9 +11,9 @@ import org.apache.shardingsphere.infra.merge.engine.merger.impl.TransparentResul
 import org.apache.shardingsphere.sharding.constant.ShardingOrder;
 import org.apache.shardingsphere.sql.parser.sql.common.statement.dal.DALStatement;
 
-public class NewShardingResultMergerEngine implements ResultMergerEngine<ColumnRule> {
+public class NewShardingResultMergerEngine implements ResultMergerEngine<ShardingExtraRule> {
 	@Override
-	public ResultMerger newInstance(String schemaName, DatabaseType databaseType, ColumnRule rule, ConfigurationProperties props, SQLStatementContext<?> sqlStatementContext) {
+	public ResultMerger newInstance(String schemaName, DatabaseType databaseType, ShardingExtraRule rule, ConfigurationProperties props, SQLStatementContext<?> sqlStatementContext) {
 		if (sqlStatementContext instanceof SelectStatementContext) {
 			return new NewShardingDQLResultMerger(databaseType, rule);
 		}
@@ -29,7 +29,7 @@ public class NewShardingResultMergerEngine implements ResultMergerEngine<ColumnR
 	}
 
 	@Override
-	public Class<ColumnRule> getTypeClass() {
-		return ColumnRule.class;
+	public Class<ShardingExtraRule> getTypeClass() {
+		return ShardingExtraRule.class;
 	}
 }
