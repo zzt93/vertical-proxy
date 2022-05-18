@@ -2,6 +2,7 @@ package cn.superdata.proxy.infra.merge;
 
 import org.apache.shardingsphere.infra.executor.sql.execute.result.query.QueryResult;
 import org.apache.shardingsphere.infra.merge.result.MergedResult;
+import org.apache.shardingsphere.sql.parser.sql.common.constant.OrderDirection;
 
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -11,37 +12,40 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-public class NewShardingMergedResult implements MergedResult {
+public class SelectMergedResult implements MergedResult {
 	public static final int PK_COLUMN_INDEX = 1;
 	private final HeaderMerge.MappedQueryResults mappedQueryResults;
 	private final List<QueryResult> queryResults;
-	private final boolean[] used;
-	private Class<?> pkType;
-	private Comparator pkComparator;
+	private final boolean[] resultInUse;
+	private final Class<?> pkType;
+	private final Comparator pkComparator;
 	private boolean wasNull;
 
-	public NewShardingMergedResult(List<QueryResult> queryResults, HeaderMerge.MappedQueryResults mappedQueryResults) {
+	public SelectMergedResult(List<QueryResult> queryResults, HeaderMerge.MappedQueryResults mappedQueryResults, OrderDirection orderDirection) {
 		this.mappedQueryResults = mappedQueryResults;
 		this.queryResults = queryResults;
-		used = new boolean[queryResults.size()];
-		Arrays.fill(used, true);
+		resultInUse = new boolean[queryResults.size()];
+		Arrays.fill(resultInUse, true);
 		pkType = Object.class;
-		pkComparator = Comparator.naturalOrder();
+		pkComparator = Comparator.nullsLast(orderDirection == OrderDirection.ASC ? Comparator.naturalOrder() : Comparator.naturalOrder().reversed());
 	}
 
 	@Override
 	public boolean next() throws SQLException {
 		boolean next = false;
+		boolean[] resultValid = new boolean[queryResults.size()];
 		for (int i = 0; i < queryResults.size(); i++) {
-			if (used[i]) {
-				next = queryResults.get(i).next() || next;
-				used[i] = false;
+			if (resultInUse[i]) { // result just used before next()
+				resultValid[i] = queryResults.get(i).next();
+				next = resultValid[i] || next;
+				resultInUse[i] = false;
 			}
 		}
 		if (!next) return false;
 
 		Object pk = null;
 		for (int i = 0; i < queryResults.size(); i++) {
+			if (!resultValid[i]) continue;
 			Object value = queryResults.get(i).getValue(PK_COLUMN_INDEX, pkType);
 			if (i == 0) {
 				pk = value;
@@ -50,9 +54,10 @@ public class NewShardingMergedResult implements MergedResult {
 			}
 		}
 		for (int i = 0; i < queryResults.size(); i++) {
+			if (!resultValid[i]) continue;
 			Object value = queryResults.get(i).getValue(PK_COLUMN_INDEX, pkType);
-			if (pkComparator.compare(value, pk) == 0) {
-				used[i] = true;
+			if (pkComparator.compare(value, pk) == 0) { // resultValid && key match
+				resultInUse[i] = true;
 			}
 		}
 		return true;
@@ -60,22 +65,34 @@ public class NewShardingMergedResult implements MergedResult {
 
 	@Override
 	public final Object getValue(final int columnIndex, final Class<?> type) throws SQLException {
-		Optional<QueryResult> result = getCurrentQueryResult(columnIndex);
 		RouteUnitIndex routeUnitIndex = mappedQueryResults.get(columnIndex);
-		return result.isPresent() ? result.get().getValue(routeUnitIndex.getColIndexInRouteUnit(), type) : null;
+		Optional<QueryResult> result = getCurrentQueryResult(mappedQueryResults.get(columnIndex));
+		if (routeUnitIndex.getMore() == null) {
+			return result.isPresent() ? result.get().getValue(routeUnitIndex.getColIndexInRouteUnit(), type) : null;
+		} else {
+			Object value = null;
+			do {
+				result = getCurrentQueryResult(routeUnitIndex);
+				if (result.isPresent()) {
+					value = result.get().getValue(routeUnitIndex.getColIndexInRouteUnit(), type);
+				}
+				routeUnitIndex = routeUnitIndex.getMore();
+			} while (value == null && routeUnitIndex != null);
+			return value;
+		}
 	}
 
 	@Override
 	public final Object getCalendarValue(final int columnIndex, final Class<?> type, final Calendar calendar) throws SQLException {
-		Optional<QueryResult> result = getCurrentQueryResult(columnIndex);
 		RouteUnitIndex routeUnitIndex = mappedQueryResults.get(columnIndex);
+		Optional<QueryResult> result = getCurrentQueryResult(routeUnitIndex);
 		return result.isPresent() ? result.get().getCalendarValue(routeUnitIndex.getColIndexInRouteUnit(), type, calendar) : null;
 	}
 
 	@Override
 	public final InputStream getInputStream(final int columnIndex, final String type) throws SQLException {
-		Optional<QueryResult> result = getCurrentQueryResult(columnIndex);
 		RouteUnitIndex routeUnitIndex = mappedQueryResults.get(columnIndex);
+		Optional<QueryResult> result = getCurrentQueryResult(routeUnitIndex);
 		return result.isPresent() ? result.get().getInputStream(routeUnitIndex.getColIndexInRouteUnit(), type) : null;
 	}
 
@@ -84,10 +101,9 @@ public class NewShardingMergedResult implements MergedResult {
 		return wasNull;
 	}
 
-	private Optional<QueryResult> getCurrentQueryResult(int columnIndex) throws SQLException {
-		RouteUnitIndex mappedQueryResult = mappedQueryResults.get(columnIndex);
+	private Optional<QueryResult> getCurrentQueryResult(RouteUnitIndex mappedQueryResult) throws SQLException {
 		int routeUnitIndex = mappedQueryResult.getRouteUnitIndex();
-		if (used[routeUnitIndex]) {
+		if (resultInUse[routeUnitIndex]) {
 			QueryResult value = queryResults.get(routeUnitIndex);
 			wasNull = value.wasNull();
 			return Optional.of(value);

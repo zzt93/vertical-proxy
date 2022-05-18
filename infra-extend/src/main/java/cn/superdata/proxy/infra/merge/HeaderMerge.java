@@ -35,7 +35,12 @@ public class HeaderMerge {
 				ArrayList<String> projectionStr = ColumnSegments.projectionWithNull(projections, logicToActual, shardingExtraRule.getLogicPrimaryKey(singleLogicTable));
 				for (int i = 0; i < projectionStr.size(); i++) {
 					if (projectionStr.get(i) != null) {
-						l.put(i+1, new RouteUnitIndex(colIndex++, routeUnitCount));
+						int key = i + 1;
+						if (!l.containsKey(key)) {
+							l.put(key, new RouteUnitIndex(colIndex++, routeUnitCount));
+						} else {
+							l.get(key).setMore(new RouteUnitIndex(colIndex++, routeUnitCount));
+						}
 					}
 				}
 				routeUnitCount++;

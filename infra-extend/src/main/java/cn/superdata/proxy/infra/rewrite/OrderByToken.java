@@ -33,6 +33,7 @@ import java.util.Map;
 public final class OrderByToken extends SQLToken implements Substitutable, RouteUnitAware {
 
     private final Map<RouteUnit, String> m;
+    @Getter
     private final OrderDirection orderDirection;
     @Getter
     private final int stopIndex;

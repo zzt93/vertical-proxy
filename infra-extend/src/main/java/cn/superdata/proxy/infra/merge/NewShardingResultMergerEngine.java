@@ -15,7 +15,7 @@ public class NewShardingResultMergerEngine implements ResultMergerEngine<Shardin
 	@Override
 	public ResultMerger newInstance(String schemaName, DatabaseType databaseType, ShardingExtraRule rule, ConfigurationProperties props, SQLStatementContext<?> sqlStatementContext) {
 		if (sqlStatementContext instanceof SelectStatementContext) {
-			return new NewShardingDQLResultMerger(databaseType, rule);
+			return new SelectResultMerger(databaseType, rule);
 		}
 		if (sqlStatementContext.getSqlStatement() instanceof DALStatement) {
 //			return new ShardingDALResultMerger(schemaName, rule);

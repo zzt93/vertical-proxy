@@ -19,6 +19,7 @@ package cn.superdata.proxy.infra.rewrite;
 
 import lombok.Setter;
 import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.statement.dal.ExplainStatementContext;
 import org.apache.shardingsphere.infra.binder.statement.dal.ShowColumnsStatementContext;
 import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
 import org.apache.shardingsphere.infra.rewrite.sql.token.generator.OptionalSQLTokenGenerator;
@@ -27,7 +28,9 @@ import org.apache.shardingsphere.infra.rewrite.sql.token.pojo.SQLToken;
 import org.apache.shardingsphere.infra.route.context.RouteContext;
 import org.apache.shardingsphere.infra.route.context.RouteUnit;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.generic.table.TableSegment;
+import org.apache.shardingsphere.sql.parser.sql.common.statement.dal.ExplainStatement;
 import org.apache.shardingsphere.sql.parser.sql.common.statement.dml.SelectStatement;
+import org.apache.shardingsphere.sql.parser.sql.dialect.statement.mysql.dal.MySQLExplainStatement;
 import org.apache.shardingsphere.sql.parser.sql.dialect.statement.mysql.dal.MySQLShowColumnsStatement;
 
 import java.util.HashMap;
@@ -62,6 +65,9 @@ public final class FromTokenGenerator implements OptionalSQLTokenGenerator<SQLSt
             return new FromToken(tableSegment.getStartIndex(), tableSegment.getStopIndex(), getDerivedProjectionTexts(sqlStatementContext));
         } else if (sqlStatementContext instanceof ShowColumnsStatementContext) {
             TableSegment tableSegment = ((MySQLShowColumnsStatement) sqlStatementContext.getSqlStatement()).getTable();
+            return new FromToken(tableSegment.getStartIndex(), tableSegment.getStopIndex(), getDerivedProjectionTexts(sqlStatementContext));
+        } else if (sqlStatementContext instanceof ExplainStatementContext) {
+            TableSegment tableSegment = ((MySQLExplainStatement) sqlStatementContext.getSqlStatement()).getTable().get();
             return new FromToken(tableSegment.getStartIndex(), tableSegment.getStopIndex(), getDerivedProjectionTexts(sqlStatementContext));
         } else {
             throw new UnsupportedOperationException();

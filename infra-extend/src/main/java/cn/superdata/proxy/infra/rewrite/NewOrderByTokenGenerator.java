@@ -20,8 +20,6 @@ package cn.superdata.proxy.infra.rewrite;
 import cn.superdata.proxy.core.rule.ShardingExtraRule;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.shardingsphere.infra.binder.segment.select.orderby.OrderByContext;
-import org.apache.shardingsphere.infra.binder.segment.select.orderby.OrderByItem;
 import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
 import org.apache.shardingsphere.infra.rewrite.sql.token.generator.OptionalSQLTokenGenerator;
@@ -36,6 +34,7 @@ import org.apache.shardingsphere.sql.parser.sql.common.statement.dml.SelectState
 import org.apache.shardingsphere.sql.parser.sql.dialect.handler.dml.SelectStatementHandler;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -62,22 +61,28 @@ public final class NewOrderByTokenGenerator implements OptionalSQLTokenGenerator
 	@Override
 	public OrderByToken generateSQLToken(SelectStatementContext selectStatementContext) {
 		Optional<OrderBySegment> orderBySegment = selectStatementContext.getSqlStatement().getOrderBy();
-		Collection<OrderByItemSegment> items = orderBySegment.get().getOrderByItems();
+		OrderDirection dir = getOrderDirection(selectStatementContext);
 		Map<RouteUnit, String> m = new HashMap<>();
-		OrderDirection dir = OrderDirection.ASC;
 		for (RouteUnit routeUnit : routeContext.getRouteUnits()) {
 			String singleActualTable = ColumnSegments.getSingleActualTable(selectStatementContext, routeUnit);
 			String singleLogicTable = ColumnSegments.getSingleLogicTable(selectStatementContext);
 			String pk = rule.getPrimaryKey(singleLogicTable, singleActualTable);
-			if (items.size() != 1) {
-				if (items.size() > 1) log.warn("Ignore multiple order by clause: {}", selectStatementContext.getSqlStatement());
-			} else {
-				dir = items.iterator().next().getOrderDirection();
-			}
 			m.put(routeUnit, pk);
 		}
 		int startIndex = getGenerateOrderByStartIndex(selectStatementContext);
 		return new OrderByToken(startIndex, orderBySegment.map(OrderBySegment::getStopIndex).orElse(startIndex), m, dir);
+	}
+
+	public OrderDirection getOrderDirection(SelectStatementContext selectStatementContext) {
+		Optional<OrderBySegment> orderBySegment = selectStatementContext.getSqlStatement().getOrderBy();
+		Collection<OrderByItemSegment> items = orderBySegment.map(OrderBySegment::getOrderByItems).orElse(Collections.emptyList());
+		OrderDirection dir = OrderDirection.ASC;
+		if (items.size() != 1) {
+			if (items.size() > 1) log.warn("Ignore multiple order by clause: {}", selectStatementContext.getSqlStatement());
+		} else {
+			dir = items.iterator().next().getOrderDirection();
+		}
+		return dir;
 	}
 
 	private int getGenerateOrderByStartIndex(final SelectStatementContext selectStatementContext) {
