@@ -34,6 +34,7 @@ public class SelectMergedResult implements MergedResult {
 	public boolean next() throws SQLException {
 		boolean next = false;
 		boolean[] resultValid = new boolean[queryResults.size()];
+		Arrays.fill(resultValid, true);
 		for (int i = 0; i < queryResults.size(); i++) {
 			if (resultInUse[i]) { // result just used before next()
 				resultValid[i] = queryResults.get(i).next();
