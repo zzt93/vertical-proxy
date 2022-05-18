@@ -73,13 +73,13 @@ public final class QueryHeaderBuilderTest {
     
     @Test
     public void assertQueryHeaderColumnNameFromProjectionsContext() throws SQLException {
-        QueryHeader header = QueryHeaderBuilder.build(createProjectionsContext(), createQueryResultMetaData(), createMetaData(), 1);
+        QueryHeader header = QueryHeaderBuilder.build(createProjectionsContext(), createQueryResultMetaData(), createMetaData(), 1, 1);
         assertThat(header.getColumnName(), is("order_id"));
     }
     
     @Test
     public void assertQueryHeaderColumnNameFromMetaData() throws SQLException {
-        QueryHeader header = QueryHeaderBuilder.build(createProjectionsContext(), createQueryResultMetaData(), createMetaData(), 2);
+        QueryHeader header = QueryHeaderBuilder.build(createProjectionsContext(), createQueryResultMetaData(), createMetaData(), 2, 2);
         assertThat(header.getColumnName(), is("expr"));
     }
     

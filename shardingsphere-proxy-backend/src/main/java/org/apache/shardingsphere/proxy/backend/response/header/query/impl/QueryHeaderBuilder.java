@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 import org.apache.shardingsphere.infra.binder.segment.select.projection.Projection;
 import org.apache.shardingsphere.infra.binder.segment.select.projection.ProjectionsContext;
 import org.apache.shardingsphere.infra.binder.segment.select.projection.impl.ColumnProjection;
+import org.apache.shardingsphere.infra.binder.segment.select.projection.impl.ExpressionProjection;
 import org.apache.shardingsphere.infra.executor.sql.execute.result.query.QueryResultMetaData;
 import org.apache.shardingsphere.infra.metadata.ShardingSphereMetaData;
 import org.apache.shardingsphere.infra.metadata.schema.model.ColumnMetaData;
@@ -60,12 +61,20 @@ public final class QueryHeaderBuilder {
      * @return query header
      * @throws SQLException SQL exception
      */
-    public static QueryHeader build(final ProjectionsContext projectionsContext, 
-                                    final QueryResultMetaData queryResultMetaData, final ShardingSphereMetaData metaData, final int columnIndex) throws SQLException {
-        return build(queryResultMetaData, metaData, getColumnName(projectionsContext, queryResultMetaData, columnIndex), columnIndex);
+    public static QueryHeader build(final ProjectionsContext projectionsContext,
+                                    final QueryResultMetaData queryResultMetaData, final ShardingSphereMetaData metaData, final int columnIndex, int projectionIndex) throws SQLException {
+        return build(queryResultMetaData, metaData, getColumnLabel(projectionsContext, projectionIndex), columnIndex);
     }
-    
-    private static QueryHeader build(final QueryResultMetaData queryResultMetaData, final ShardingSphereMetaData metaData, final String columnName, final int columnIndex) throws SQLException {
+
+    private static String getColumnLabel(ProjectionsContext projectionsContext, int projectionIndex) {
+        Projection projection = projectionsContext.getExpandProjections().get(projectionIndex - 1);
+        if (projection instanceof ExpressionProjection) {
+            return projection.getColumnLabel();
+        }
+        return projection.getExpression();
+    }
+
+    private static QueryHeader build(final QueryResultMetaData queryResultMetaData, final ShardingSphereMetaData metaData, final String columnLabel, final int columnIndex) throws SQLException {
         String schemaName = null == metaData ? "" : metaData.getName();
         String actualTableName = queryResultMetaData.getTableName(columnIndex);
         Optional<DataNodeContainedRule> dataNodeContainedRule = null == metaData
@@ -75,12 +84,11 @@ public final class QueryHeaderBuilder {
         if (null != actualTableName && dataNodeContainedRule.isPresent()) {
             tableName = dataNodeContainedRule.get().findLogicTableByActualTable(actualTableName).orElse("");
             TableMetaData tableMetaData = metaData.getSchema().get(tableName);
-            primaryKey = null != tableMetaData && Optional.ofNullable(tableMetaData.getColumns().get(columnName.toLowerCase())).map(ColumnMetaData::isPrimaryKey).orElse(false);
+            primaryKey = null != tableMetaData && Optional.ofNullable(tableMetaData.getColumns().get(columnLabel)).map(ColumnMetaData::isPrimaryKey).orElse(false);
         } else {
             tableName = actualTableName;
             primaryKey = false;
         }
-        String columnLabel = queryResultMetaData.getColumnLabel(columnIndex);
         int columnType = queryResultMetaData.getColumnType(columnIndex);
         String columnTypeName = queryResultMetaData.getColumnTypeName(columnIndex);
         int columnLength = queryResultMetaData.getColumnLength(columnIndex);
@@ -88,7 +96,7 @@ public final class QueryHeaderBuilder {
         boolean signed = queryResultMetaData.isSigned(columnIndex);
         boolean notNull = queryResultMetaData.isNotNull(columnIndex);
         boolean autoIncrement = queryResultMetaData.isAutoIncrement(columnIndex);
-        return new QueryHeader(schemaName, tableName, columnLabel, columnName, columnType, columnTypeName, columnLength, decimals, signed, primaryKey, notNull, autoIncrement);
+        return new QueryHeader(schemaName, tableName, columnLabel, columnLabel, columnType, columnTypeName, columnLength, decimals, signed, primaryKey, notNull, autoIncrement);
     }
     
     private static String getColumnName(final ProjectionsContext projectionsContext, final QueryResultMetaData queryResultMetaData, final int columnIndex) throws SQLException {

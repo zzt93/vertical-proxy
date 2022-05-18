@@ -145,15 +145,15 @@ public final class DatabaseCommunicationEngine {
         List<QueryHeader> result = new ArrayList<>(columnCount);
         for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
             RouteUnitIndex routeUnitIndex = mappedQueryResults.get(columnIndex);
-            result.add(createQueryHeader(executionContext, queryResults.get(routeUnitIndex.getRouteUnitIndex()), metaData, routeUnitIndex.getColIndexInRouteUnit()));
+            result.add(createQueryHeader(executionContext, queryResults.get(routeUnitIndex.getRouteUnitIndex()), metaData, routeUnitIndex.getColIndexInRouteUnit(), columnIndex));
         }
         return result;
     }
     
     private QueryHeader createQueryHeader(final ExecutionContext executionContext,
-                                          final QueryResult queryResultSample, final ShardingSphereMetaData metaData, final int columnIndex) throws SQLException {
+                                          final QueryResult queryResultSample, final ShardingSphereMetaData metaData, final int columnIndex, int projectionIndex) throws SQLException {
         return hasSelectExpandProjections(executionContext.getSqlStatementContext())
-                ? QueryHeaderBuilder.build(((SelectStatementContext) executionContext.getSqlStatementContext()).getProjectionsContext(), queryResultSample.getMetaData(), metaData, columnIndex)
+                ? QueryHeaderBuilder.build(((SelectStatementContext) executionContext.getSqlStatementContext()).getProjectionsContext(), queryResultSample.getMetaData(), metaData, columnIndex, projectionIndex)
                 : QueryHeaderBuilder.build(queryResultSample.getMetaData(), metaData, columnIndex);
     }
     
