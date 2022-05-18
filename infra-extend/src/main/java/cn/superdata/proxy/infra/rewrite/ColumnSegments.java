@@ -61,38 +61,6 @@ public class ColumnSegments {
 		return q.poll();
 	}
 
-	private static void extract(ExpressionSegment segment, Consumer<ExpressionSegment> c) {
-		if (null == segment) {
-			return;
-		}
-		if (segment instanceof LiteralExpressionSegment) {
-			c.accept(segment);
-		} else if (segment instanceof ColumnSegment) {
-			c.accept(segment);
-		} else if (segment instanceof CommonExpressionSegment) {
-		} else if (segment instanceof ListExpression) {
-		} else if (segment instanceof BinaryOperationExpression) {
-			extract(((BinaryOperationExpression) segment).getLeft(), c);
-			extract(((BinaryOperationExpression) segment).getRight(), c);
-			c.accept(segment);
-		} else if (segment instanceof ExistsSubqueryExpression) {
-		} else if (segment instanceof SubqueryExpressionSegment) {
-		} else if (segment instanceof InExpression) {
-		} else if (segment instanceof BetweenExpression) {
-		} else if (segment instanceof FunctionSegment) {
-			Collection<ExpressionSegment> parameters = ((FunctionSegment) segment).getParameters();
-			for (ExpressionSegment parameter : parameters) {
-				extract(parameter, c);
-			}
-			c.accept(segment);
-		} else if (segment instanceof ExpressionProjectionSegment) {
-			extract(((ExpressionProjectionSegment) segment).getExpr(), c);
-			c.accept(segment);
-		} else {
-			throw new UnsupportedOperationException("unsupported TableSegment type: " + segment.getClass());
-		}
-	}
-
 	private static void build(ExpressionSegment segment, Map<String, String> colMap, LinkedList<String> q) {
 		if (null == segment) {
 			return;

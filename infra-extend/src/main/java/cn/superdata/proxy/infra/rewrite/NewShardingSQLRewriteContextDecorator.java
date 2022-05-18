@@ -8,6 +8,7 @@ import org.apache.shardingsphere.infra.rewrite.sql.token.generator.SQLTokenGener
 import org.apache.shardingsphere.infra.rewrite.sql.token.generator.aware.RouteContextAware;
 import org.apache.shardingsphere.infra.route.context.RouteContext;
 import org.apache.shardingsphere.sharding.constant.ShardingOrder;
+import org.apache.shardingsphere.sharding.rewrite.token.generator.impl.OrderByTokenGenerator;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -18,7 +19,7 @@ public class NewShardingSQLRewriteContextDecorator implements SQLRewriteContextD
 		Collection<SQLTokenGenerator> result = new LinkedList<>();
 		result.add(new ProjectionTokenGenerator(rule));
 		result.add(new FromTokenGenerator());
-//		result.add(new OrderByTokenGenerator());
+		result.add(new NewOrderByTokenGenerator(rule));
 		result.add(new WhereTokenGenerator(rule));
 
 		for (SQLTokenGenerator each : result) {

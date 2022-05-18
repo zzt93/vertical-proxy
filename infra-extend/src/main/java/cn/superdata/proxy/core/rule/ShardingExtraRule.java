@@ -27,6 +27,10 @@ public class ShardingExtraRule implements SchemaRule {
 		return tables.get(logicTable).getLogicToActual(actualTable);
 	}
 
+	public String getPrimaryKey(String logicTable, String actualTable) {
+		return tables.get(logicTable).getPrimaryKey(actualTable);
+	}
+
 	public String getLogicPrimaryKey(String logicTable) {
 		return tables.get(logicTable).getLogicPrimaryKey();
 	}
