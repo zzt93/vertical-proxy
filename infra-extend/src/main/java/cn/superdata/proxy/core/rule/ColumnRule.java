@@ -25,4 +25,8 @@ public class ColumnRule implements SchemaRule {
 		res.put(logicPrimaryKey, primaryKey.get(actualTable));
 		return res;
 	}
+
+	public String getPrimaryKey(String actualTable) {
+		return primaryKey.get(actualTable);
+	}
 }

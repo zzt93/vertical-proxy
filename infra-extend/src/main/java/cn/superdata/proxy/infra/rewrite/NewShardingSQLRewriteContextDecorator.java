@@ -12,12 +12,13 @@ import org.apache.shardingsphere.sharding.constant.ShardingOrder;
 import java.util.Collection;
 import java.util.LinkedList;
 
-public class FieldsSQLRewriteContextDecorator implements SQLRewriteContextDecorator<ShardingExtraRule> {
+public class NewShardingSQLRewriteContextDecorator implements SQLRewriteContextDecorator<ShardingExtraRule> {
 	@Override
 	public void decorate(ShardingExtraRule rule, ConfigurationProperties props, SQLRewriteContext sqlRewriteContext, RouteContext routeContext) {
 		Collection<SQLTokenGenerator> result = new LinkedList<>();
 		result.add(new ProjectionTokenGenerator(rule));
 		result.add(new FromTokenGenerator());
+//		result.add(new OrderByTokenGenerator());
 		result.add(new WhereTokenGenerator(rule));
 
 		for (SQLTokenGenerator each : result) {

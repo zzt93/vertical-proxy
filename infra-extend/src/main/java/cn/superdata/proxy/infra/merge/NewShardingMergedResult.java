@@ -9,14 +9,13 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class NewShardingMergedResult implements MergedResult {
+	public static final int PK_COLUMN_INDEX = 1;
 	private final HeaderMerge.MappedQueryResults mappedQueryResults;
 	private final List<QueryResult> queryResults;
 	private final boolean[] used;
-	private Map<Integer, Integer> pkIndex;
 	private Class<?> pkType;
 	private Comparator pkComparator;
 	private boolean wasNull;
@@ -28,7 +27,6 @@ public class NewShardingMergedResult implements MergedResult {
 		Arrays.fill(used, true);
 		pkType = Object.class;
 		pkComparator = Comparator.naturalOrder();
-		pkIndex = mappedQueryResults.getPkIndex();
 	}
 
 	@Override
@@ -44,7 +42,7 @@ public class NewShardingMergedResult implements MergedResult {
 
 		Object pk = null;
 		for (int i = 0; i < queryResults.size(); i++) {
-			Object value = queryResults.get(i).getValue(pkIndex.get(i), pkType);
+			Object value = queryResults.get(i).getValue(PK_COLUMN_INDEX, pkType);
 			if (i == 0) {
 				pk = value;
 			} else {
@@ -52,7 +50,7 @@ public class NewShardingMergedResult implements MergedResult {
 			}
 		}
 		for (int i = 0; i < queryResults.size(); i++) {
-			Object value = queryResults.get(i).getValue(pkIndex.get(i), pkType);
+			Object value = queryResults.get(i).getValue(PK_COLUMN_INDEX, pkType);
 			if (pkComparator.compare(value, pk) == 0) {
 				used[i] = true;
 			}
@@ -63,22 +61,22 @@ public class NewShardingMergedResult implements MergedResult {
 	@Override
 	public final Object getValue(final int columnIndex, final Class<?> type) throws SQLException {
 		Optional<QueryResult> result = getCurrentQueryResult(columnIndex);
-		HeaderMerge.MappedQueryResult mappedQueryResult = mappedQueryResults.get(columnIndex);
-		return result.isPresent() ? result.get().getValue(mappedQueryResult.getMappedColIndex(), type) : null;
+		RouteUnitIndex routeUnitIndex = mappedQueryResults.get(columnIndex);
+		return result.isPresent() ? result.get().getValue(routeUnitIndex.getColIndexInRouteUnit(), type) : null;
 	}
 
 	@Override
 	public final Object getCalendarValue(final int columnIndex, final Class<?> type, final Calendar calendar) throws SQLException {
 		Optional<QueryResult> result = getCurrentQueryResult(columnIndex);
-		HeaderMerge.MappedQueryResult mappedQueryResult = mappedQueryResults.get(columnIndex);
-		return result.isPresent() ? result.get().getCalendarValue(mappedQueryResult.getMappedColIndex(), type, calendar) : null;
+		RouteUnitIndex routeUnitIndex = mappedQueryResults.get(columnIndex);
+		return result.isPresent() ? result.get().getCalendarValue(routeUnitIndex.getColIndexInRouteUnit(), type, calendar) : null;
 	}
 
 	@Override
 	public final InputStream getInputStream(final int columnIndex, final String type) throws SQLException {
 		Optional<QueryResult> result = getCurrentQueryResult(columnIndex);
-		HeaderMerge.MappedQueryResult mappedQueryResult = mappedQueryResults.get(columnIndex);
-		return result.isPresent() ? result.get().getInputStream(mappedQueryResult.getMappedColIndex(), type) : null;
+		RouteUnitIndex routeUnitIndex = mappedQueryResults.get(columnIndex);
+		return result.isPresent() ? result.get().getInputStream(routeUnitIndex.getColIndexInRouteUnit(), type) : null;
 	}
 
 	@Override
@@ -87,10 +85,10 @@ public class NewShardingMergedResult implements MergedResult {
 	}
 
 	private Optional<QueryResult> getCurrentQueryResult(int columnIndex) throws SQLException {
-		HeaderMerge.MappedQueryResult mappedQueryResult = mappedQueryResults.get(columnIndex);
-		int mappedResultIndex = mappedQueryResult.getMappedResultIndex();
-		if (used[mappedResultIndex]) {
-			QueryResult value = queryResults.get(mappedResultIndex);
+		RouteUnitIndex mappedQueryResult = mappedQueryResults.get(columnIndex);
+		int routeUnitIndex = mappedQueryResult.getRouteUnitIndex();
+		if (used[routeUnitIndex]) {
+			QueryResult value = queryResults.get(routeUnitIndex);
 			wasNull = value.wasNull();
 			return Optional.of(value);
 		}

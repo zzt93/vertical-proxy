@@ -1,7 +1,6 @@
 package cn.superdata.proxy.infra.rewrite;
 
 import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
 import org.apache.shardingsphere.infra.route.context.RouteUnit;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.column.ColumnSegment;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.expr.BetweenExpression;
@@ -25,21 +24,27 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class ColumnSegments {
-	public static ArrayList<String> projection(ProjectionsSegment projections, Map<String, String> logicToActual) {
+	public static List<String> projection(ProjectionsSegment projections, Map<String, String> logicToActual, String logicPrimaryKey) {
+		return projectionWithNull(projections, logicToActual, logicPrimaryKey).stream().filter(Objects::nonNull).collect(Collectors.toList());
+	}
+
+	public static ArrayList<String> projectionWithNull(ProjectionsSegment projections, Map<String, String> logicToActual, String logicPrimaryKey) {
 		ArrayList<String> res = new ArrayList<>();
+		// always add primary key for result merge
+		res.add(logicToActual.get(logicPrimaryKey));
 		for (ProjectionSegment segment : projections.getProjections()) {
 			if (segment instanceof ExpressionSegment) {
 				res.add(extract((ExpressionSegment) segment, logicToActual));
 			} else if (segment instanceof ColumnProjectionSegment) {
 				String col = ((ColumnProjectionSegment) segment).getColumn().getIdentifier().getValue();
-				if (logicToActual.containsKey(col)) {
-					res.add(logicToActual.get(col));
-				}
+				res.add(logicToActual.get(col));
 			} else if (segment instanceof ShorthandProjectionSegment) {
 				// TODO: 2022/5/13 ShorthandProjection.getActual
 				res.add("*");
@@ -54,14 +59,6 @@ public class ColumnSegments {
 		LinkedList<String> q = new LinkedList<>();
 		build(segment, colMap, q);
 		return q.poll();
-	}
-
-	public static void extract(ExpressionSegment segment, List<ColumnSegment> res) {
-		extract(segment, s -> {
-			if (segment instanceof ColumnSegment) {
-				res.add((ColumnSegment) s);
-			}
-		});
 	}
 
 	private static void extract(ExpressionSegment segment, Consumer<ExpressionSegment> c) {
@@ -109,7 +106,13 @@ public class ColumnSegments {
 		} else if (segment instanceof BinaryOperationExpression) {
 			build(((BinaryOperationExpression) segment).getRight(), colMap, q);
 			build(((BinaryOperationExpression) segment).getLeft(), colMap, q);
-			q.add(q.pollLast() + " " + ((BinaryOperationExpression) segment).getOperator() + " " + q.pollLast());
+			String left = q.pollLast();
+			String right = q.pollLast();
+			if (left == null || right == null) {
+				q.add(null);
+			} else {
+				q.add(left + " " + ((BinaryOperationExpression) segment).getOperator() + " " + right);
+			}
 		} else if (segment instanceof ExistsSubqueryExpression) {
 		} else if (segment instanceof SubqueryExpressionSegment) {
 		} else if (segment instanceof InExpression) {
@@ -120,10 +123,15 @@ public class ColumnSegments {
 				build(parameter, colMap, q);
 			}
 			List<String> reversed = new ArrayList<>(parameters.size());
-			for (ExpressionSegment par : parameters) {
-				reversed.add(q.pollLast());
+			for (ExpressionSegment ignored : parameters) {
+				String e = q.pollLast();
+				if (e == null) {
+					q.add(null);
+					return;
+				}
+				reversed.add(e);
 			}
-			StringJoiner sj = new StringJoiner(",", ((FunctionSegment) segment).getFunctionName()+"(", ")");
+			StringJoiner sj = new StringJoiner(",", ((FunctionSegment) segment).getFunctionName() + "(", ")");
 			for (int i = reversed.size() - 1; i >= 0; i--) {
 				String s = reversed.get(i);
 				sj.add(s);

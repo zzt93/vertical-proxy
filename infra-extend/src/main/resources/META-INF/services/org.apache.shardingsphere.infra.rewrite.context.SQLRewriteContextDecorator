@@ -15,5 +15,5 @@
 # limitations under the License.
 #
 
-cn.superdata.proxy.infra.rewrite.FieldsSQLRewriteContextDecorator
+cn.superdata.proxy.infra.rewrite.NewShardingSQLRewriteContextDecorator
 cn.superdata.proxy.infra.rewrite.OverrideDefaultShardingSQLRewriteContextDecorator

@@ -41,7 +41,7 @@ public final class NewShardingDQLResultMerger implements ResultMerger {
 
     @Override
     public MergedResult merge(final List<QueryResult> queryResults, final SQLStatementContext<?> sqlStatementContext, final ShardingSphereSchema schema) throws SQLException {
-        HeaderMerge.MappedQueryResults mappedQueryResults = HeaderMerge.mappedQueryResults(queryResults, sqlStatementContext, rule);
+        HeaderMerge.MappedQueryResults mappedQueryResults = HeaderMerge.projectionMapping(sqlStatementContext, queryResults, rule);
 //        ((SelectStatement) sqlStatementContext.getSqlStatement()).getOrderBy().
         return new NewShardingMergedResult(queryResults, mappedQueryResults);
     }

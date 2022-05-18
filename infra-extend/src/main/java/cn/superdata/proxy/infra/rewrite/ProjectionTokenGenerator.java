@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
@@ -60,12 +61,10 @@ public final class ProjectionTokenGenerator implements CollectionSQLTokenGenerat
             String singleActualTable = ColumnSegments.getSingleActualTable(selectStatementContext, routeUnit);
             String singleLogicTable = ColumnSegments.getSingleLogicTable(selectStatementContext);
             Map<String, String> logicToActual = rule.getLogicToActual(singleLogicTable, singleActualTable);
-            ArrayList<String> extract = ColumnSegments.projection(projections, logicToActual);
+            List<String> extract = ColumnSegments.projection(projections, logicToActual, rule.getLogicPrimaryKey(singleLogicTable));
             StringJoiner sb = new StringJoiner(",");
             for (String segment : extract) {
-                if (!segment.isEmpty()) {
-                    sb.add(segment);
-                }
+                sb.add(segment);
             }
             projection.put(routeUnit, sb.toString());
         }

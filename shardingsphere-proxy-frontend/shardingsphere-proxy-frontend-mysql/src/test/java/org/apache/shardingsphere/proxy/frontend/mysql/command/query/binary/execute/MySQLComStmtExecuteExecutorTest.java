@@ -107,6 +107,7 @@ public final class MySQLComStmtExecuteExecutorTest {
         MySQLComStmtExecutePacket packet = mock(MySQLComStmtExecutePacket.class);
         when(packet.getSql()).thenReturn(" select wide_order.id, wide_order.name, wide_order.type from wide_order where wide_order . id  + wide_order.id = 2 and abs(id)=1 limit 1;");
         when(packet.getSql()).thenReturn(" select wide_order.id+1 as sum, wide_order.name, wide_order.type from wide_order where wide_order . id  + wide_order.id = 2 and abs(id)=1 limit 1;");
+        when(packet.getSql()).thenReturn(" select wide_order.id as sum, wide_order.name, wide_order.type+1 from wide_order where wide_order . id  + wide_order.id = 2 and abs(id)=1 limit 1;");
         when(packet.getSql()).thenReturn(" select * from wide_order where wide_order . id  + wide_order.id = 2 and abs(id)=1 limit 1;");
         when(packet.getSql()).thenReturn(" select wide_order.id, wide_order.name from wide_order where wide_order . id  + wide_order.id = 2 and abs(id)=1 limit 1;");
         when(packet.getSql()).thenReturn(" select wide_order.id, wide_order.name from wide_order where wide_order . id  + wide_order.id = 2 and abs(type)=1 limit 1;");
