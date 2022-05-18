@@ -18,3 +18,7 @@ Backend:
 
 - Performance
 - Only one-to-one
+- Not support group by
+- Only order by `id`
+- Filter by any other column except `id` will return record no such column
+  - because join between different data source can't push down

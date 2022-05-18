@@ -56,8 +56,10 @@ public final class WhereTokenGenerator implements OptionalSQLTokenGenerator<Sele
         Map<RouteUnit, String> result = new HashMap<>();
         for (RouteUnit routeUnit : routeContext.getRouteUnits()) {
             Map<String, String> colMap = getLogicAndActualColumns(selectStatementContext, routeUnit);
-            String sb = ColumnSegments.extract(whereSegment.getExpr(), colMap);
-            result.put(routeUnit, sb);
+            String condition = ColumnSegments.extract(whereSegment.getExpr(), colMap);
+            if (condition != null) {
+                result.put(routeUnit, condition);
+            }
         }
         return result;
     }

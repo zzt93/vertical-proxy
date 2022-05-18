@@ -66,7 +66,12 @@ public class ColumnSegments {
 			return;
 		}
 		if (segment instanceof LiteralExpressionSegment) {
-			q.add(((LiteralExpressionSegment) segment).getLiterals().toString());
+			Object literals = ((LiteralExpressionSegment) segment).getLiterals();
+			if (literals instanceof String) {
+				q.add("'" + literals + "'");
+			} else {
+				q.add(literals.toString());
+			}
 		} else if (segment instanceof ColumnSegment) {
 			q.add(colMap.get(((ColumnSegment) segment).getIdentifier().getValue()));
 		} else if (segment instanceof CommonExpressionSegment) {
@@ -76,10 +81,15 @@ public class ColumnSegments {
 			build(((BinaryOperationExpression) segment).getLeft(), colMap, q);
 			String left = q.pollLast();
 			String right = q.pollLast();
+			String operator = ((BinaryOperationExpression) segment).getOperator();
 			if (left == null || right == null) {
-				q.add(null);
+				if (operator.equals("and") || operator.equals("or")) {
+					q.add(left == null ? right : left);
+				} else {
+					q.add(null);
+				}
 			} else {
-				q.add(left + " " + ((BinaryOperationExpression) segment).getOperator() + " " + right);
+				q.add(left + " " + operator + " " + right);
 			}
 		} else if (segment instanceof ExistsSubqueryExpression) {
 		} else if (segment instanceof SubqueryExpressionSegment) {
