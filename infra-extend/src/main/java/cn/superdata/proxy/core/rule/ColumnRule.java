@@ -25,12 +25,26 @@ public class ColumnRule implements SchemaRule {
 		res.put(logicPrimaryKey, primaryKey.get(actualTable));
 		return res;
 	}
+
 	public Map<String, String> getLogicToActual() {
 		Map<String, String> res = new HashMap<>();
 		res.put(logicPrimaryKey, primaryKey.entrySet().iterator().next().getValue());
 		for (Map.Entry<String, Map<String, String>> m : logicToActual.entrySet()) {
 			for (Map.Entry<String, String> e : m.getValue().entrySet()) {
-				res.put(m.getKey(), e.getValue());
+				res.put(e.getKey(), e.getValue());
+			}
+		}
+		return res;
+	}
+
+	public Map<String, String> getActualToLogic() {
+		Map<String, String> res = new HashMap<>();
+		for (Map.Entry<String, String> e : primaryKey.entrySet()) {
+			res.put(e.getValue(), logicPrimaryKey);
+		}
+		for (Map.Entry<String, Map<String, String>> m : logicToActual.entrySet()) {
+			for (Map.Entry<String, String> e : m.getValue().entrySet()) {
+				res.put(e.getValue(), e.getKey());
 			}
 		}
 		return res;
@@ -38,5 +52,9 @@ public class ColumnRule implements SchemaRule {
 
 	public String getPrimaryKey(String actualTable) {
 		return primaryKey.get(actualTable);
+	}
+
+	public boolean hasActualTables(String actualTable) {
+		return primaryKey.containsKey(actualTable) || logicToActual.values().stream().anyMatch(m -> m.containsKey(actualTable));
 	}
 }
