@@ -47,7 +47,7 @@ public final class OrderByToken extends SQLToken implements Substitutable, Route
     
     @Override
     public String toString(final RouteUnit routeUnit) {
-        return " ORDER BY " + m.get(routeUnit) + " " + orderDirection.name();
+        return " ORDER BY " + m.get(routeUnit) + " " + orderDirection.name() + " ";
     }
 
 }
